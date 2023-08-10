@@ -27,6 +27,7 @@ function padTo2Digits(num) {
  }
  
  function formatDate(date) {
+   if(date === null) return null;
    return [
      padTo2Digits(date.getDate()),
      padTo2Digits(date.getMonth() + 1),
@@ -85,8 +86,6 @@ function ToDoList(){
       
       function onSaveButtonClick(e, row) {
          setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.View } });
-
-         
       }
 
       function onCancelButtonClick(e, row) {
@@ -97,10 +96,12 @@ function ToDoList(){
       }
 
       function onDeleteButtonClick(e, row) {
+         fetch(baseuri + "/" + row.id ,{ method: 'DELETE', mode:'cors'})
+         .then((response) => response.json())
+         .catch((e) => {console.log(e)});
       }
 
       function mySaveOnServerFunction(row, oldRow) {
-         console.log(row);
          fetch(baseuri + "/" + row.id + "?"+ "text=" + row.text + "&dueDate=" +formatDate(row.dueDate) + "&priority=" + row.priority ,{ method: 'PUT', mode:'cors'})
          .then((response) => response.json())
          .catch((e) => {console.log(e)});
