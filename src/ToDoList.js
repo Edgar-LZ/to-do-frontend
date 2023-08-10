@@ -7,6 +7,7 @@ import {Button, IconButton} from '@mui/material'
 import { CheckBox } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
 
 
 import { useCallback } from 'react';
@@ -134,6 +135,8 @@ function ToDoList(){
             ...rowModesModel,
             [row.id]: { mode: GridRowModes.View, ignoreModifications: true },
           });
+          window.location.reload(false);
+
       }
 
       function onDeleteButtonClick(e, row) {
@@ -170,6 +173,17 @@ function ToDoList(){
           disableColumnMenu:true,
           renderCell: (params) => {
             const isDone = params.row.done;
+            const isInEditMode = rowModesModel[params.row.id]?.mode === GridRowModes.Edit;
+            if(isInEditMode) {
+               return (
+                  <IconButton aria-label="delete" color="primary"
+                  disabled
+                  >
+                     <IndeterminateCheckBoxIcon/>
+                     
+                   </IconButton>
+                   );
+            }
             if (isDone)
             return (
             <IconButton aria-label="delete" color="primary"
