@@ -3,7 +3,12 @@ import { useState, useEffect, useContext, createContext } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { GridRowModes, GridToolbarContainer, DataGrid, useGridApiContext, useGridApiRef } from '@mui/x-data-grid';
 import { Pagination } from '@mui/material';
-import {Button} from '@mui/material'
+import {Button, IconButton} from '@mui/material'
+import { CheckBox } from '@mui/icons-material';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+
+
 import { useCallback } from 'react';
 
 import SearchForm from './Form';
@@ -99,10 +104,23 @@ function ToDoList(){
             
          }
       }
+
+      function handleDone(e, id) {
+         fetch(baseuri + "/" + id + "/done" ,{ method: 'POST', mode:'cors'})
+         .then((response) => response.json())
+         .catch((e) => {console.log(e)});
+         window.location.reload(false);
+      }
+
+      function handleUndone(e, id){
+         fetch(baseuri + "/" + id + "/undone" ,{ method: 'PUT', mode:'cors'})
+         .then((response) => response.json())
+         .catch((e) => {console.log(e)});
+         window.location.reload(false);
+      }
        
 
       function onEditButtonClick(e, row) {
-         
          setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.Edit } });
          console.log(rowModesModel);
       }
@@ -145,7 +163,41 @@ function ToDoList(){
       }
 
       const columns = [
-        { field: 'done', headerName: 'Done', type: "boolean", width: 150, editable: true, sortable:false, disableColumnMenu:true},
+        { field: 'done', 
+        headerName: 'Done',
+         width: 150, 
+          sortable:false, 
+          disableColumnMenu:true,
+          renderCell: (params) => {
+            const isDone = params.row.done;
+            if (isDone)
+            return (
+            <IconButton aria-label="delete" color="primary"
+            onClick={
+               (e) => {
+                  handleUndone(e, params.row.id)
+               }
+            }
+            >
+               <CheckBoxIcon sx={{color: '#239ce8'}}/>
+               
+             </IconButton>
+             );
+             return (
+               <IconButton aria-label="delete" color="primary"
+               onClick={
+                  (e) => {
+                     handleDone(e, params.row.id)
+                  }
+               }
+            
+               >
+                  <CheckBoxOutlineBlankIcon />
+                </IconButton>
+                );
+             
+           }
+         },
         { field: 'text', headerName: 'Name', width: 150, editable: true, sortable:false, disableColumnMenu:true},
         { field: 'priority', headerName: 'Priority', type: "singleSelect",valueOptions: ["High", "Medium", "Low"] ,width: 150, editable: true, disableColumnMenu:true},
         { field: 'dueDate', headerName: 'Due Date', type:"date", width: 150, editable: true, disableColumnMenu:true},
@@ -155,7 +207,7 @@ function ToDoList(){
          description: "Actions column.",
          sortable: false,
          disableColumnMenu:true,
-         width: 160,
+         width: 260,
          renderCell: (params) => {
           const isInEditMode = rowModesModel[params.row.id]?.mode === GridRowModes.Edit;
 
