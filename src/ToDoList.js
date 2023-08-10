@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useContext, createContext } from 'react';
-import { GridRowModes, DataGrid, useGridApiContext, useGridApiRef } from '@mui/x-data-grid';
+import AddIcon from '@mui/icons-material/Add';
+import { GridRowModes, GridToolbarContainer, DataGrid, useGridApiContext, useGridApiRef } from '@mui/x-data-grid';
 import { Pagination } from '@mui/material';
 import {Button} from '@mui/material'
 import { useCallback } from 'react';
@@ -33,6 +34,28 @@ function padTo2Digits(num) {
      padTo2Digits(date.getMonth() + 1),
      date.getFullYear(),
    ].join('/');
+ }
+
+
+ function EditToolbar(props) {
+   const { setRows, setRowModesModel } = props;
+ 
+   const handleClick = () => {
+     const id = "0";
+     setRows((oldRows) => [...oldRows, { id:"0", text:"", priority:"Low", dueDate:null, done: false, isNew: true }]);
+     setRowModesModel((oldModel) => ({
+       ...oldModel,
+       [id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
+     }));
+   };
+ 
+   return (
+     <GridToolbarContainer>
+       <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
+         Add record
+       </Button>
+     </GridToolbarContainer>
+   );
  }
 
 function ToDoList(){
@@ -99,9 +122,19 @@ function ToDoList(){
          fetch(baseuri + "/" + row.id ,{ method: 'DELETE', mode:'cors'})
          .then((response) => response.json())
          .catch((e) => {console.log(e)});
+         window.location.reload(false);
+
       }
 
-      function mySaveOnServerFunction(row, oldRow) {
+      function processUpdate(row, oldRow) {
+         if(row.isNew) {
+            fetch(baseuri + "?"+ "text=" + row.text + "&dueDate=" +formatDate(row.dueDate) + "&priority=" + row.priority ,{ method: 'POST', mode:'cors'})
+            .then((response) => response.json())
+            .catch((e) => {console.log(e)});
+            window.location.reload(false);
+            return row;
+            
+         }
          fetch(baseuri + "/" + row.id + "?"+ "text=" + row.text + "&dueDate=" +formatDate(row.dueDate) + "&priority=" + row.priority ,{ method: 'PUT', mode:'cors'})
          .then((response) => response.json())
          .catch((e) => {console.log(e)});
@@ -178,6 +211,7 @@ function ToDoList(){
          }
        }
       ];
+      
     
     return (
         <div>
@@ -190,8 +224,15 @@ function ToDoList(){
                         rowModesModel={rowModesModel}
                         onSortModelChange={handleSortModelChange} 
                         apiRef={apiRef}
+                        slots={{
+                           toolbar: EditToolbar,
+                         }}
+                         slotProps={{
+                           toolbar: { setRows, setRowModesModel },
+                         }}
+                 
                         processRowUpdate={(updatedRow, originalRow) =>
-                           mySaveOnServerFunction(updatedRow, originalRow)
+                           processUpdate(updatedRow, originalRow)
                          }
                         onProcessRowUpdateError = {handleUpdateError}
 
