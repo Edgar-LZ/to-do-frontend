@@ -1,18 +1,20 @@
 
-import { useState, useEffect, useContext, createContext } from 'react';
+import { useState, useEffect, createContext } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import { GridRowModes, GridToolbarContainer, DataGrid, useGridApiContext, useGridApiRef } from '@mui/x-data-grid';
+import { GridRowModes, GridToolbarContainer, DataGrid, useGridApiRef } from '@mui/x-data-grid';
 import { Pagination } from '@mui/material';
 import {Button, IconButton} from '@mui/material'
-import { CheckBox } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
-
-import { useCallback } from 'react';
 
 import SearchForm from './Form';
+import InfoBox from './InfoBox';
+import { FaceRetouchingOffSharp } from '@mui/icons-material';
+
 
 export const ToDoContext = createContext(
    {
@@ -25,7 +27,14 @@ export const ToDoContext = createContext(
       urlParams: "?",
        setUrlParams:() => {}, 
        baseuri:"", 
-       setBaseUri: () => {}
+       setBaseUri: () => {},
+       averageTime: {
+         total: "--:--:-- hours",
+         low: "--:--:-- hours",
+         mediun: "--:--:-- hours",
+         high: "--:--:-- hours",
+         
+       },
    }
 );
 
@@ -71,13 +80,28 @@ function ToDoList(){
     const [rows, setRows ] = useState([]); 
     const [pages, setPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
-    const [urlParams, setUrlParams] = useState("?");
+    const [urlParams, setUrlParams] = useState({});
     const [baseuri, setBaseUri] = useState('http://localhost:9090/todos');
     const [rowModesModel, setRowModesModel] = useState({});
+    const [sortByPriority, setSortByPriority] = useState(0);
+    const [sortByDueDate, setSortByDueDate] = useState(0);
+    const [priorityString, setPriorityString] = useState("Priority");
+    const [dateString, setDateString] = useState("Due Date");
+    const [doneAll, setDoneAll] = useState(false);
+    const [averageTime, setAverageTime] = useState({
+      all: "--:--:-- hours",
+      low: "--:--:-- hours",
+      medium: "--:--:-- hours",
+      high: "--:--:-- hours",
+    });
    
 
     useEffect(() => {
-      fetch(baseuri + '?'+ urlParams ,{ method: 'GET'})
+      const paramsString = '?' + Object.keys(urlParams).map(key => { return `${key}=${encodeURIComponent(urlParams[key])}`; }).join('&');
+      console.log(baseuri + paramsString);
+      setDoneAll(doneAll);
+      
+      fetch(baseuri + paramsString ,{ method: 'GET'})
       .then((response) => response.json())
       .then((data) => {
          data.toDos.forEach(element => {
@@ -88,16 +112,26 @@ function ToDoList(){
          setRows(data.toDos);
          setPages(data.pages);
          setCurrentPage(data.currentPage);
+         setAverageTime(
+            {
+               all: data.timeAverage,
+               low: data.lowAverage,
+               medium: data.mediumAverage,
+               high: data.highAverage
+            }
+         );
       })
       .catch((err) => {
          console.log(err.message);
       });
-     }, [urlParams, currentPage, pages]);
+     }, [urlParams]);
 
      function changePage(e, value) { 
-      setUrlParams( new URLSearchParams({
+      setUrlParams( {
+            ... urlParams,
             page: value,
-        })); 
+          }
+          ); 
       }
 
       function handleSortModelChange(model, details) {
@@ -110,20 +144,39 @@ function ToDoList(){
          fetch(baseuri + "/" + id + "/done" ,{ method: 'POST', mode:'cors'})
          .then((response) => response.json())
          .catch((e) => {console.log(e)});
-         window.location.reload(false);
+         //window.location.reload(false);
+         setUrlParams({...urlParams});
       }
 
       function handleUndone(e, id){
+         setDoneAll(false);
          fetch(baseuri + "/" + id + "/undone" ,{ method: 'PUT', mode:'cors'})
          .then((response) => response.json())
          .catch((e) => {console.log(e)});
-         window.location.reload(false);
+         //window.location.reload(false);
+         setUrlParams({...urlParams});
+
+      }
+
+      function handleDoneAll(e) {
+         setDoneAll(true);
+         console.log(e);
+         const newRows = rows.map( row => {
+            if(!row.done)
+            handleDone(e, row.id)
+            });
+      }
+      function handleUndoneAll(e) {
+         console.log(e);
+         const newRows = rows.map( row => {
+            if(row.done)
+            handleUndone(e, row.id)
+            });
       }
        
 
       function onEditButtonClick(e, row) {
          setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.Edit } });
-         console.log(rowModesModel);
       }
       
       function onSaveButtonClick(e, row) {
@@ -145,6 +198,44 @@ function ToDoList(){
          .catch((e) => {console.log(e)});
          window.location.reload(false);
 
+      }
+
+      function handleSortingClick(params, event, detais){   
+         if(params.field == 'priority' ) {
+            if(sortByPriority == 1) {
+               setSortByPriority(-1);
+               setPriorityString("Priority (asc)");
+               setUrlParams({
+                  sortByPriority: -1,
+                  sortByDueDate: sortByDueDate,
+               });
+            } else {
+               setPriorityString( sortByPriority === 0 ? "Priority (desc)" : "Priority");
+               setSortByPriority(sortByPriority+ 1);
+               setUrlParams({
+                  sortByPriority: sortByPriority +1,
+                  sortByDueDate: sortByDueDate,
+               });
+            }
+            
+
+         } else if (params.field == 'dueDate') {
+            if(sortByDueDate == 1) {
+               setSortByDueDate(-1);
+               setDateString("Due Date (desc)");
+               setUrlParams({
+                  sortByPriority: sortByPriority,
+                  sortByDueDate: -1,
+               });
+            } else {
+               setDateString( sortByDueDate === 0 ? "Due Date (asc)" : "Due Date");
+               setSortByDueDate(sortByDueDate+ 1);
+               setUrlParams({
+                  sortByPriority: sortByPriority,
+                  sortByDueDate: sortByDueDate+1,
+               });
+            }
+         }
       }
 
       function processUpdate(row, oldRow) {
@@ -171,6 +262,37 @@ function ToDoList(){
          width: 150, 
           sortable:false, 
           disableColumnMenu:true,
+          renderHeader: (params) => {
+            if(doneAll) {
+
+               return (
+                  <IconButton aria-label="delete" color="primary"
+                  onClick={
+                     (e) => {
+                        handleUndoneAll(e)
+                     }
+                  }
+                  >
+                     <CheckBoxIcon sx={{color: '#239ce8'}}/>
+                     
+                   </IconButton>
+                   );
+            }
+
+            return(
+            <IconButton aria-label="delete" color="primary"
+               onClick={
+                  (e) => {
+                     handleDoneAll(e)
+                  }
+               }
+            
+               >
+                  <CheckBoxOutlineBlankIcon />
+                </IconButton>
+            );
+          }
+          ,
           renderCell: (params) => {
             const isDone = params.row.done;
             const isInEditMode = rowModesModel[params.row.id]?.mode === GridRowModes.Edit;
@@ -213,8 +335,15 @@ function ToDoList(){
            }
          },
         { field: 'text', headerName: 'Name', width: 150, editable: true, sortable:false, disableColumnMenu:true},
-        { field: 'priority', headerName: 'Priority', type: "singleSelect",valueOptions: ["High", "Medium", "Low"] ,width: 150, editable: true, disableColumnMenu:true},
-        { field: 'dueDate', headerName: 'Due Date', type:"date", width: 150, editable: true, disableColumnMenu:true},
+        { field: 'priority',
+         headerName: priorityString,
+          sortable:false, type: "singleSelect",
+          valueOptions: ["High", "Medium", "Low"] ,
+          width: 150, 
+          editable: true,
+           disableColumnMenu:true
+      },
+        { field: 'dueDate', headerName: dateString, sortable:false ,type:"date", width: 150, editable: true, disableColumnMenu:true},
         {
          field: "deleteButton",
          headerName: "Actions",
@@ -281,7 +410,7 @@ function ToDoList(){
     
     return (
         <div>
-            <ToDoContext.Provider value={{rows, setRows, pages, setPages, currentPage, setCurrentPage, urlParams, setUrlParams, baseuri, setBaseUri}}>
+            <ToDoContext.Provider value={{rows, setRows, pages, setPages, currentPage, setCurrentPage, urlParams, setUrlParams, baseuri, setBaseUri, averageTime,setAverageTime}}>
             <SearchForm/>
             <DataGrid editMode="row" 
                         rows={rows}
@@ -301,9 +430,11 @@ function ToDoList(){
                            processUpdate(updatedRow, originalRow)
                          }
                         onProcessRowUpdateError = {handleUpdateError}
+                        onColumnHeaderClick={handleSortingClick}
 
             />
             <Pagination count={pages} page={currentPage} onChange={changePage} showLastButton showFirstButton/>
+            <InfoBox/>
             </ToDoContext.Provider>
         </div>
      );
