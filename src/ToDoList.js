@@ -9,6 +9,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import SortIcon from '@mui/icons-material/Sort';
 
 
 import SearchForm from './Form';
@@ -341,9 +342,50 @@ function ToDoList(){
           valueOptions: ["High", "Medium", "Low"] ,
           width: 150, 
           editable: true,
-           disableColumnMenu:true
+           disableColumnMenu:true,
+           renderHeader: (params) => {
+            if(sortByPriority==1) {
+
+               return (
+                  <><p>Priority</p><ArrowDownwardIcon /></>
+               );
+            } else if (sortByPriority==-1) {
+               return (
+                  <><p>Priority</p><ArrowUpwardIcon /></>
+               );
+            }
+
+            return (
+               <><p>Priority</p><SortIcon /></>
+            );
+          },
+
+
       },
-        { field: 'dueDate', headerName: dateString, sortable:false ,type:"date", width: 150, editable: true, disableColumnMenu:true},
+        { field: 'dueDate',
+         headerName: dateString, 
+         sortable:false ,type:"date",
+          width: 150,
+           editable: true, 
+           disableColumnMenu:true,
+           renderHeader: (params) => {
+            if(sortByDueDate==1) {
+
+               return (
+                  <><p>Due Date</p><ArrowUpwardIcon /></>
+               );
+            } else if (sortByDueDate==-1) {
+               return (
+                  <><p>Due Date</p><ArrowDownwardIcon /></>
+               );
+            }
+
+            return (
+               <><p>dueDate</p><SortIcon /></>
+            );
+          },
+      
+      },
         {
          field: "deleteButton",
          headerName: "Actions",
@@ -351,6 +393,7 @@ function ToDoList(){
          sortable: false,
          disableColumnMenu:true,
          width: 260,
+        
          renderCell: (params) => {
           const isInEditMode = rowModesModel[params.row.id]?.mode === GridRowModes.Edit;
 
