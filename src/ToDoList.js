@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext } from 'react';
+import { useState, useEffect, createContext, forwardRef } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { GridRowModes, GridToolbarContainer, DataGrid, useGridApiRef } from '@mui/x-data-grid';
 import { Pagination } from '@mui/material';
@@ -10,12 +10,16 @@ import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SortIcon from '@mui/icons-material/Sort';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 
 import SearchForm from './Form';
 import InfoBox from './InfoBox';
-import { FaceRetouchingOffSharp } from '@mui/icons-material';
 
+const Alert = forwardRef(function Alert(props, ref) {
+   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+ });
 
 export const ToDoContext = createContext(
    {
@@ -89,17 +93,25 @@ function ToDoList(){
     const [priorityString, setPriorityString] = useState("Priority");
     const [dateString, setDateString] = useState("Due Date");
     const [doneAll, setDoneAll] = useState(false);
+    const [openAlert, setOpenAlert] = useState(false);
+    const [message, setMessage] = useState("Error");
     const [averageTime, setAverageTime] = useState({
       all: "--:--:-- hours",
       low: "--:--:-- hours",
       medium: "--:--:-- hours",
       high: "--:--:-- hours",
     });
+  
+    const handleCloseSnack = (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+      setOpenAlert(false);
+    };
    
 
     useEffect(() => {
       const paramsString = '?' + Object.keys(urlParams).map(key => { return `${key}=${encodeURIComponent(urlParams[key])}`; }).join('&');
-      console.log(baseuri + paramsString);
       setDoneAll(doneAll);
       
       fetch(baseuri + paramsString ,{ method: 'GET'})
@@ -189,7 +201,7 @@ function ToDoList(){
             ...rowModesModel,
             [row.id]: { mode: GridRowModes.View, ignoreModifications: true },
           });
-          window.location.reload(false);
+          setUrlParams({...urlParams});
 
       }
 
@@ -197,7 +209,7 @@ function ToDoList(){
          fetch(baseuri + "/" + row.id ,{ method: 'DELETE', mode:'cors'})
          .then((response) => response.json())
          .catch((e) => {console.log(e)});
-         window.location.reload(false);
+         setUrlParams({...urlParams});
 
       }
 
@@ -242,15 +254,35 @@ function ToDoList(){
       function processUpdate(row, oldRow) {
          if(row.isNew) {
             fetch(baseuri + "?"+ "text=" + row.text + "&dueDate=" +formatDate(row.dueDate) + "&priority=" + row.priority ,{ method: 'POST', mode:'cors'})
-            .then((response) => response.json())
-            .catch((e) => {console.log(e)});
-            window.location.reload(false);
+            .then((response) => (
+               response.json()
+            )).then( (data) => {
+               if(data.status == 406) {
+                  throw new Error(data.reason);
+               }
+            })
+            .catch((e) => {
+               setMessage(e.toString())
+               setOpenAlert(true);
+               setUrlParams({...urlParams});
+            
+            });
             return row;
             
          }
          fetch(baseuri + "/" + row.id + "?"+ "text=" + row.text + "&dueDate=" +formatDate(row.dueDate) + "&priority=" + row.priority ,{ method: 'PUT', mode:'cors'})
          .then((response) => response.json())
-         .catch((e) => {console.log(e)});
+         .then( (data) => {
+            if(data.status == 406) {
+               throw new Error(data.reason);
+            }
+         })
+         .catch((e) => {
+            setMessage(e.toString())
+            setOpenAlert(true);
+            setUrlParams({...urlParams});
+         
+         });
          return row;
       }
       function handleUpdateError(err) {
@@ -335,7 +367,7 @@ function ToDoList(){
              
            }
          },
-        { field: 'text', headerName: 'Name', width: 150, editable: true, sortable:false, disableColumnMenu:true},
+        { field: 'text', headerName: 'Name', width: 600, editable: true, sortable:false, disableColumnMenu:true},
         { field: 'priority',
          headerName: priorityString,
           sortable:false, type: "singleSelect",
@@ -462,6 +494,7 @@ function ToDoList(){
                         rowModesModel={rowModesModel}
                         onSortModelChange={handleSortModelChange} 
                         apiRef={apiRef}
+                        rowHeight={100}
                         slots={{
                            toolbar: EditToolbar,
                          }}
@@ -476,6 +509,11 @@ function ToDoList(){
                         onColumnHeaderClick={handleSortingClick}
 
             />
+            <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseSnack}>
+               <Alert onClose={handleCloseSnack} severity="error" sx={{ width: '100%' }}>
+                  {message}
+               </Alert>
+      </Snackbar>
             <Pagination count={pages} page={currentPage} onChange={changePage} showLastButton showFirstButton/>
             <InfoBox/>
             </ToDoContext.Provider>
