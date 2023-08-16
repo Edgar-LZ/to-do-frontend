@@ -6,8 +6,9 @@ import Select from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
 import { Textarea } from '@mui/joy';
 import {Button} from '@mui/material'
-import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+
+
 
 
 function SearchForm() {
@@ -43,47 +44,73 @@ function SearchForm() {
     
     
     return (
-        <Box sx={{ flexGrow: 1 , p: 5}}>
-        <Box sx={{ flexGrow: 1, border: '2px solid lightgray', }}>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 3fr)' , p:2}}>
-        <label htmlFor="text-area" id="select-label">Name: </label>
+        
+        <Grid p={5}>
+        <Grid p={5} border={"2px solid lightgray"}>
+            <Grid container spacing={2}>
+            <Grid item xs={1} textAlign={"center"}>
+                <label htmlFor="text-area" id="select-label">Name: </label>
+            </Grid>
+            <Grid item xs={10} textAlign={"center"}>
                         <Textarea
                             value={search}
                             onChange={handleTextareaChange}
                             placeholder="Search term..."
                          sx={{ mb: 1 }}
                         />
-        </Box>
+            </Grid>
+            <Grid item xs={1}/>
+            </Grid>
+            
+
+            
+
                 
                     
 
-         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', p:2 }} >
+            <Grid container spacing={2}>
+                <Grid item xs={1} textAlign={"center"}>
+                    <label htmlFor="select-button" id="select-label">Priority: </label>
+                </Grid>
+
+                <Grid item xs={4} textAlign={"center"}>
+                    <Select defaultValue="All" onChange={handlePriorityChange}>
+                        <Option value="All">All</Option>
+                        <Option value="High">High</Option>
+                        <Option value="Medium">Medium</Option>
+                        <Option value="Low">Low</Option>
+                    </Select>
+                </Grid>
+                <Grid item xs={7}/>
+            </Grid>
+
                 
-                <label htmlFor="select-button" id="select-label">Priority: </label>
-                <Select defaultValue="All" onChange={handlePriorityChange}>
-                    <Option value="All">All</Option>
-                    <Option value="High">High</Option>
-                    <Option value="Medium">Medium</Option>
-                    <Option value="Low">Low</Option>
-                </Select>
-        </Box>
-                
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' , p:2}} >
-             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }} >
-                <label htmlFor="select-button" id="select-label">State: </label>
+            <Grid container spacing={2}>
+                <Grid item xs={1} textAlign={"center"}>
+                    <label htmlFor="select-button" id="select-label">State: </label>
+                </Grid>
+
+
+                <Grid item xs={4} textAlign={"center"}>
                 <Select defaultValue="All" onChange={handleStatusChange}>
                     <Option value="All">All</Option>
                     <Option value="Done">Done</Option>
                     <Option value="Undone">Undone</Option>
                 </Select>
-                <Box/>
-                </Box>
-             <Button onClick={handleClick}> Submit</Button>
-         </Box>
+                </Grid>
 
-    </Box>
-    </Box>
+            
+                <Grid item xs={5}/>
+                <Grid item xs={1} alignContent={"right"}>
+                    <Button onClick={handleClick} variant="contained"> Search</Button>
+                </Grid>
+
+                <Grid item xs={1}/>
+             </Grid>
+         </Grid>
+
+        </Grid>
+
      );
 
 }

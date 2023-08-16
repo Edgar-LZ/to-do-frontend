@@ -9,9 +9,15 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import SortIcon from '@mui/icons-material/Sort';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+
+import CodeIcon from '@mui/icons-material/Code';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+
 
 
 import SearchForm from './Form';
@@ -62,7 +68,7 @@ function padTo2Digits(num) {
  
    const handleClick = () => {
      const id = "0";
-     setRows((oldRows) => [...oldRows, { id:"0", text:"", priority:"Low", dueDate:null, done: false, isNew: true }]);
+     setRows((oldRows) => [{ id:"0", text:"", priority:"Low", dueDate:null, done: false, isNew: true },...oldRows, ]);
      setRowModesModel((oldModel) => ({
        ...oldModel,
        [id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
@@ -71,8 +77,8 @@ function padTo2Digits(num) {
  
    return (
      <GridToolbarContainer>
-       <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
-         Add record
+       <Button color="primary" variant="contained" startIcon={<AddIcon />} onClick={handleClick}>
+         New To Do
        </Button>
      </GridToolbarContainer>
    );
@@ -267,6 +273,7 @@ function ToDoList(){
                setUrlParams({...urlParams});
             
             });
+            setUrlParams({...urlParams});
             return row;
             
          }
@@ -283,6 +290,7 @@ function ToDoList(){
             setUrlParams({...urlParams});
          
          });
+         setUrlParams({...urlParams});
          return row;
       }
       function handleUpdateError(err) {
@@ -379,16 +387,16 @@ function ToDoList(){
             if(sortByPriority==1) {
 
                return (
-                  <><p>Priority</p><ArrowDownwardIcon /></>
+                  <><p>Priority</p><KeyboardArrowDownIcon /></>
                );
             } else if (sortByPriority==-1) {
                return (
-                  <><p>Priority</p><ArrowUpwardIcon /></>
+                  <><p>Priority</p><KeyboardArrowUpIcon /></>
                );
             }
 
             return (
-               <><p>Priority</p><SortIcon /></>
+               <><p>Priority</p><CodeIcon /></>
             );
           },
 
@@ -404,16 +412,16 @@ function ToDoList(){
             if(sortByDueDate==1) {
 
                return (
-                  <><p>Due Date</p><ArrowUpwardIcon /></>
+                  <><p>Due Date</p><KeyboardArrowUpIcon /></>
                );
             } else if (sortByDueDate==-1) {
                return (
-                  <><p>Due Date</p><ArrowDownwardIcon /></>
+                  <><p>Due Date</p><KeyboardArrowDownIcon /></>
                );
             }
 
             return (
-               <><p>dueDate</p><SortIcon /></>
+               <><p>Due Date</p><CodeIcon /></>
             );
           },
       
@@ -466,7 +474,7 @@ function ToDoList(){
                }
              >
                Edit
-             </Button>
+             </Button> /
              <Button variant="text"
                onClick={
                   (e) => {
@@ -487,6 +495,7 @@ function ToDoList(){
         <div>
             <ToDoContext.Provider value={{rows, setRows, pages, setPages, currentPage, setCurrentPage, urlParams, setUrlParams, baseuri, setBaseUri, averageTime,setAverageTime}}>
             <SearchForm/>
+            <Grid p={5}>
             <DataGrid editMode="row" 
                         rows={rows}
                         columns={columns} 
@@ -494,7 +503,6 @@ function ToDoList(){
                         rowModesModel={rowModesModel}
                         onSortModelChange={handleSortModelChange} 
                         apiRef={apiRef}
-                        rowHeight={100}
                         slots={{
                            toolbar: EditToolbar,
                          }}
@@ -509,12 +517,24 @@ function ToDoList(){
                         onColumnHeaderClick={handleSortingClick}
 
             />
+            </Grid>
             <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseSnack}>
                <Alert onClose={handleCloseSnack} severity="error" sx={{ width: '100%' }}>
                   {message}
                </Alert>
       </Snackbar>
-            <Pagination count={pages} page={currentPage} onChange={changePage} showLastButton showFirstButton/>
+         <Grid container>
+         <Grid container spacing={2} >
+         <Grid xs={3} item/>
+         <Grid xs={6} item border={"2px solid lightgray"} p={2} >
+         <Box display="flex" justifyContent="center" >
+            <Pagination count={pages} page={currentPage} onChange={changePage} showLastButton showFirstButton />
+         </Box>
+         </Grid>
+         <Grid xs={3} item/>
+         </Grid>
+         </Grid>
+
             <InfoBox/>
             </ToDoContext.Provider>
         </div>
